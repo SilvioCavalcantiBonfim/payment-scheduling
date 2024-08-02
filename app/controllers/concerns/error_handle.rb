@@ -1,4 +1,4 @@
-require_relative '../../errors/invalid_date_format'
+require_relative '../../errors/past_date'
 require_relative '../../errors/payment_not_found'
 module ErrorHandle
   extend ActiveSupport::Concern
