@@ -14,7 +14,7 @@ module ErrorHandle
 
   private
 
-  def handle_payment_not_updateable(_exeption)
+  def handle_payment_not_updateable(exception)
     render json: { error: exception.message }, status: :unprocessable_entity
   end
 
