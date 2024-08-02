@@ -6,6 +6,7 @@ module ErrorHandle
   included do
     rescue_from InvalidDateFormatError, with: :handle_invalid_date_format
     rescue_from PaymentNotFoundError, with: :handle_payment_not_found
+    rescue_from JSON::ParserError, with: :handle_json_parse_error
   end
 
   private
@@ -16,5 +17,9 @@ module ErrorHandle
 
   def handle_payment_not_found(exception)
     render json: { error: exception.message }, status: :not_found
+  end
+
+  def handle_json_parse_error(_exception)
+    render json: { error: 'Invalid data format' }, status: :bad_request
   end
 end
