@@ -1,0 +1,2 @@
+class PaymentNotUpdateableError < StandardError
+end

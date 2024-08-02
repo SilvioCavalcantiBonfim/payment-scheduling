@@ -16,7 +16,10 @@ class PaymentsController < ApplicationController
   end
 
   def update
-    raise PaymentNotUpdateableError, '' if @payment.status == Payment.statuses[:pending]
+    unless @payment.status == 'pending'
+      raise PaymentNotUpdateableError,
+            'The payment cannot be updated because its current status is not pending.'
+    end
 
     @payment.update({ pay_at: @pay_at })
     render json: @payment, only: %i[status pay_at]
