@@ -11,4 +11,11 @@ Payment.delete_all
 #                  { pay_at: DateTime.parse('2024-04-01T13:00:00') }
 #                ])
 
+# current_time = Time.current
+# future_time = current_time + 2.minutes
+
+# Crie dois registros com o campo `pay_at` definido para `future_time`
+# Payment.create({ pay_at: future_time })
+# Payment.create({ pay_at: future_time })
+
 puts 'Seed concluído! Payments foram criados com data e hora.'

@@ -5,6 +5,27 @@ class Payment < ApplicationRecord
   # Validar se a data é no futuro
   validate :pay_at_in_future
 
+  def self.update_status
+    filter_by_current_datetime_and_status.update_all(status: :pay)
+  end
+
+  def self.filter_by_current_datetime_and_status
+    current_time = Time.now
+    where(
+      "EXTRACT(year FROM pay_at) = ? AND
+       EXTRACT(month FROM pay_at) = ? AND
+       EXTRACT(day FROM pay_at) = ? AND
+       EXTRACT(hour FROM pay_at) = ? AND
+       EXTRACT(minute FROM pay_at) = ? AND status = ?",
+      current_time.year,
+      current_time.month,
+      current_time.day,
+      current_time.hour,
+      current_time.min,
+      0
+    )
+  end
+
   private
 
   def pay_at_format
