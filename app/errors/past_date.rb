@@ -1,0 +1,2 @@
+class PastDateError < StandardError
+end

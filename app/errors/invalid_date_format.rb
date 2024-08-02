@@ -1,2 +1,0 @@
-class InvalidDateFormatError < StandardError
-end

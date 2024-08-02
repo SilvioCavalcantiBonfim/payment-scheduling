@@ -36,6 +36,6 @@ class PaymentsController < ApplicationController
     rescue StandardError
       raise JSON::ParserError, 'Invalid date format.'
     end
-    raise InvalidDateFormatError, 'must be in the future.' if @pay_at <= Time.current
+    raise PastDateError, 'must be in the future.' if @pay_at <= Time.current
   end
 end
