@@ -12,7 +12,7 @@ Payment.delete_all
 #                ])
 
 current_time = Time.current
-future_time = current_time + 2.minutes
+future_time = current_time + 1.minutes
 
 # Crie dois registros com o campo `pay_at` definido para `future_time`
 Payment.create({ pay_at: future_time })
