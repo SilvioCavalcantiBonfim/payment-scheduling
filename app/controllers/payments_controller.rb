@@ -1,6 +1,4 @@
 class PaymentsController < ApplicationController
-  skip_before_action :verify_authenticity_token, only: %i[new show update]
-
   before_action :find_by_id, only: %i[show update]
 
   before_action :parse_body, only: %i[new update]
@@ -36,7 +34,8 @@ class PaymentsController < ApplicationController
     begin
       body = JSON.parse(request.body.read, symbolize_names: true)
       @pay_at = DateTime.parse(body[:pay_at])
-    rescue StandardError
+    rescue StandardError => e
+      rails.logger.debug e.message
       raise JSON::ParserError, 'Invalid date format.'
     end
     raise PastDateError, 'must be in the future.' if @pay_at <= Time.current
