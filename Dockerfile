@@ -1,62 +1,38 @@
-# syntax = docker/dockerfile:1
+# Use uma imagem base do Ruby
+FROM ruby:3.3.4
 
-# Make sure RUBY_VERSION matches the Ruby version in .ruby-version and Gemfile
-ARG RUBY_VERSION=3.3.4
-FROM registry.docker.com/library/ruby:$RUBY_VERSION-slim as base
+# Instale dependências do sistema
+RUN apt-get update -qq && apt-get install -y \
+  nodejs \
+  curl \
+  cron \
+  build-essential \
+  libsqlite3-dev
 
-# Rails app lives here
-WORKDIR /rails
+# Instale a gem 'whenever' globalmente
+RUN gem install whenever
 
-# Set production environment
-ENV RAILS_ENV="production" \
-    BUNDLE_DEPLOYMENT="1" \
-    BUNDLE_PATH="/usr/local/bundle" \
-    BUNDLE_WITHOUT="development"
+# Defina o diretório de trabalho
+WORKDIR /myapp
 
+# Copie o Gemfile e o Gemfile.lock para o contêiner
+COPY Gemfile /myapp/Gemfile
+COPY Gemfile.lock /myapp/Gemfile.lock
 
-# Throw-away build stage to reduce size of final image
-FROM base as build
+# Instale as gems
+RUN bundle install
 
-# Install packages needed to build gems
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential git libvips pkg-config
+# Copie o restante do código da aplicação para o contêiner
+COPY . /myapp
 
-# Install application gems
-COPY Gemfile Gemfile.lock ./
-RUN bundle install && \
-    rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
-    bundle exec bootsnap precompile --gemfile
+# Configure o banco de dados
+RUN rails db:setup
 
-# Copy application code
-COPY . .
+# Adicione o cron job
+RUN bundle exec whenever --update-crontab
 
-# Precompile bootsnap code for faster boot times
-RUN bundle exec bootsnap precompile app/ lib/
-
-# Precompiling assets for production without requiring secret RAILS_MASTER_KEY
-RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
-
-
-# Final stage for app image
-FROM base
-
-# Install packages needed for deployment
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libsqlite3-0 libvips && \
-    rm -rf /var/lib/apt/lists /var/cache/apt/archives
-
-# Copy built artifacts: gems, application
-COPY --from=build /usr/local/bundle /usr/local/bundle
-COPY --from=build /rails /rails
-
-# Run and own only the runtime files as a non-root user for security
-RUN useradd rails --create-home --shell /bin/bash && \
-    chown -R rails:rails db log storage tmp
-USER rails:rails
-
-# Entrypoint prepares the database.
-ENTRYPOINT ["/rails/bin/docker-entrypoint"]
-
-# Start the server by default, this can be overwritten at runtime
+# Exponha a porta padrão
 EXPOSE 3000
-CMD ["./bin/rails", "server"]
+
+# Comando para iniciar o servidor e o cron
+CMD ["sh", "-c", "cron && rails server -b 0.0.0.0"]
