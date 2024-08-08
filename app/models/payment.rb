@@ -1,18 +1,25 @@
-class Payment < ApplicationRecord
-  enum status: { pending: 0, paid: 1 }
+require 'securerandom'
 
-  def self.update_status
-    puts filter_by_datetime_and_status.update_all(status: :paid)
+class Payment < ApplicationRecord
+  enum status: %i[pending paid]
+
+  validates_presence_of :pay_at
+  validate :future
+  validate :updatable
+
+  before_create :generate_uuid
+
+  def future
+    return unless pay_at
+
+    errors.add(:pay_at, 'Must be in the future.') unless pay_at > Time.now
   end
 
-  def self.filter_by_datetime_and_status
-    current_time = Time.now
-    date_time = current_time.strftime('%Y-%m-%d %H:%M')
+  def generate_uuid
+    self.id ||= SecureRandom.alphanumeric(10)
+  end
 
-    where(
-      "strftime('%Y-%m-%d %H:%M', pay_at) = ? AND status = ?",
-      date_time,
-      statuses[:pending]
-    )
+  def updatable
+    errors.add(:status, 'The payment cannot be updated because its current status is not pending.') unless pending?
   end
 end

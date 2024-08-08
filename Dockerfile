@@ -1,5 +1,5 @@
 # Use uma imagem base do Ruby
-FROM ruby:3.3.4
+FROM ruby:3.2.5-slim
 
 # Instale dependências do sistema
 RUN apt-get update -qq && apt-get install -y \
@@ -29,7 +29,7 @@ COPY . /myapp
 RUN rails db:setup
 
 # Adicione o cron job
-RUN bundle exec whenever --update-crontab
+RUN bundle exec whenever --update-crontab --set environment=development
 
 # Exponha a porta padrão
 EXPOSE 3000

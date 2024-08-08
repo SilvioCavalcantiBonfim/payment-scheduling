@@ -4,9 +4,10 @@ class PaymentsController < ApplicationController
   before_action :parse_body, only: %i[new update]
 
   def new
-    payment = Payment.new(pay_at: @pay_at)
-    payment.save
+    payment = Payment.create!({ pay_at: @pay_at })
     render json: { payment: payment.id }
+  rescue StandardError => e
+    raise ValidateError, e.message
   end
 
   def show
@@ -14,13 +15,10 @@ class PaymentsController < ApplicationController
   end
 
   def update
-    unless @payment.status == 'pending'
-      raise PaymentNotUpdateableError,
-            'The payment cannot be updated because its current status is not pending.'
-    end
-
-    @payment.update({ pay_at: @pay_at })
+    @payment.update!({ pay_at: @pay_at })
     render json: @payment, only: %i[status pay_at]
+  rescue StandardError => e
+    raise ValidateError, e.message
   end
 
   private
@@ -31,13 +29,9 @@ class PaymentsController < ApplicationController
   end
 
   def parse_body
-    begin
-      body = JSON.parse(request.body.read, symbolize_names: true)
-      @pay_at = DateTime.parse(body[:pay_at])
-    rescue StandardError => e
-      rails.logger.debug e.message
-      raise JSON::ParserError, 'Invalid date format.'
-    end
-    raise PastDateError, 'must be in the future.' if @pay_at <= Time.current
+    body = JSON.parse(request.body.read, symbolize_names: true)
+    @pay_at = DateTime.parse(body[:pay_at])
+  rescue StandardError
+    raise JSON::ParserError, 'Invalid date format.'
   end
 end

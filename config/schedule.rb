@@ -10,7 +10,6 @@
 # every 2.hours do
 #   command "/usr/bin/some_great_command"
 #   runner "MyModel.some_method"
-#   rake "some:great:rake:task"
 # end
 #
 # every 4.days do
@@ -18,7 +17,7 @@
 # end
 #
 every 1.minute do
-  runner 'Payment.update_status'
+  rake 'payment:update_current'
 end
 
 # Learn more: http://github.com/javan/whenever
